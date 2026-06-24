@@ -1,8 +1,10 @@
-"""Backtest engine package."""
-from .backtest import BacktestConfig, BacktestEngine, BacktestResult
-from .metrics import Trade, compute_metrics
+"""Technical indicators - pure functions over pandas Series / DataFrames."""
+from .core import (
+    sma, ema, rsi, macd, bollinger_bands, atr, vwap, stoch_rsi,
+    volume_rising, momentum,
+)
 
 __all__ = [
-    "BacktestConfig", "BacktestEngine", "BacktestResult",
-    "Trade", "compute_metrics",
+    "sma", "ema", "rsi", "macd", "bollinger_bands", "atr", "vwap",
+    "stoch_rsi", "volume_rising", "momentum",
 ]
