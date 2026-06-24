@@ -1,18 +1,18 @@
-FROM python:3.11-slim AS base
-
+FROM node:20-alpine AS builder
 WORKDIR /app
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm install
+COPY frontend/ .
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run build
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl && rm -rf /var/lib/apt/lists/*
-
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-COPY backend /app/backend
-WORKDIR /app/backend
-
-ENV PYTHONPATH=/app/backend
-EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s CMD curl -fsS http://localhost:8000/health || exit 1
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.js ./next.config.js
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 3001
+CMD ["npm", "start"]
