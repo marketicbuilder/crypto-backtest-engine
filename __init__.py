@@ -1,4 +1,7 @@
-from .loader import load_csv, load_dataset
-from . import providers
+from . import (alternative_me, binance, bitget, coingecko,
+               cryptopanic, defillama, geckoterminal)
 
-__all__ = ["load_csv", "load_dataset", "providers"]
+__all__ = [
+    "alternative_me", "binance", "bitget", "coingecko",
+    "cryptopanic", "defillama", "geckoterminal",
+]
