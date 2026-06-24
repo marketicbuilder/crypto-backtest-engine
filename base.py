@@ -1,68 +1,48 @@
-"""Strategy plug-in interface.
+"""Execution-broker interface.
 
-A strategy receives a row-level *context* (the current bar plus
-pre-computed indicators) and returns a ``Signal``.  Concrete strategies
-are registered with ``@register("name")`` so new ones can be added
-without touching the engine.
+The backtest engine, paper-trading driver and live-trading driver all
+consume the same ``Broker`` interface so a strategy written today works
+unchanged once you flip the broker.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Callable, Dict, Optional, Protocol
-
-import pandas as pd
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import Literal, Optional
 
 
 @dataclass
-class Signal:
-    """Single trading decision emitted by a strategy."""
-
-    action: str              # "buy" | "sell" | "hold"
-    score: float             # 0-100 confidence
-    reason: str              # human-readable explanation
-    breakdown: Dict[str, float] = field(default_factory=dict)
-    stop_loss_pct: Optional[float] = None
-    take_profit_pct: Optional[float] = None
-
-
-class Strategy(Protocol):
-    """Strategy plug-in contract.
-
-    ``prepare`` is called once per backtest with the full OHLCV DataFrame
-    and must return the same frame enriched with any indicator columns
-    the strategy needs at decision time.
-
-    ``decide`` is called for every bar with the enriched row and the
-    current position size (>0 = long, <0 = short, 0 = flat).
-    """
-
-    name: str
-    params: Dict[str, float]
-
-    def prepare(self, df: pd.DataFrame) -> pd.DataFrame: ...
-
-    def decide(self, row: pd.Series, position: float) -> Signal: ...
+class Order:
+    symbol: str
+    side: Literal["buy", "sell"]
+    qty: float
+    type: Literal["market", "limit"] = "market"
+    price: Optional[float] = None
+    stop_loss: Optional[float] = None
+    take_profit: Optional[float] = None
+    client_id: Optional[str] = None
 
 
-# ---------------------------------------------------------------- registry
-_REGISTRY: Dict[str, Callable[..., Strategy]] = {}
+@dataclass
+class Fill:
+    order_id: str
+    symbol: str
+    side: str
+    qty: float
+    price: float
+    fee: float
+    timestamp: str
 
 
-def register(name: str) -> Callable[[Callable[..., Strategy]], Callable[..., Strategy]]:
-    """Decorator to register a strategy factory under ``name``."""
+class Broker(ABC):
+    @abstractmethod
+    def submit(self, order: Order) -> Fill: ...
 
-    def wrap(factory: Callable[..., Strategy]) -> Callable[..., Strategy]:
-        _REGISTRY[name] = factory
-        return factory
+    @abstractmethod
+    def cancel(self, order_id: str) -> bool: ...
 
-    return wrap
+    @abstractmethod
+    def position(self, symbol: str) -> float: ...
 
-
-def get_strategy(name: str, **params) -> Strategy:
-    if name not in _REGISTRY:
-        raise KeyError(f"unknown strategy '{name}'. available: {list(_REGISTRY)}")
-    return _REGISTRY[name](**params)
-
-
-def list_strategies() -> list[str]:
-    return sorted(_REGISTRY.keys())
+    @abstractmethod
+    def cash(self) -> float: ...
