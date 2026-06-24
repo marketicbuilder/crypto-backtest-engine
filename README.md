@@ -1,8 +1,12 @@
-# pytest cache directory #
+# Sample datasets
 
-This directory contains data from the pytest's cache plugin,
-which provides the `--lf` and `--ff` options, as well as the `cache` fixture.
+| File              | Source  | Symbol   | Interval | Range                  |
+|-------------------|---------|----------|----------|------------------------|
+| `btcusdt_1d.csv`  | Binance | BTC/USDT | 1d       | last 5 years (rolling) |
 
-**Do not** commit this to version control.
+Loaded by `app.data.loader.load_csv`.  To regenerate:
 
-See [the docs](https://docs.pytest.org/en/stable/how-to/cache.html) for more information.
+```bash
+python -c "from app.data.providers.binance import fetch_ohlcv; \
+           fetch_ohlcv('BTCUSDT','1d').to_csv('data/btcusdt_1d.csv')"
+```
