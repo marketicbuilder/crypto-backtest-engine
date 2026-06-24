@@ -1,7 +1,3 @@
-from . import (alternative_me, binance, bitget, coingecko,
-               cryptopanic, defillama, geckoterminal)
+from .client import supabase
 
-__all__ = [
-    "alternative_me", "binance", "bitget", "coingecko",
-    "cryptopanic", "defillama", "geckoterminal",
-]
+__all__ = ["supabase"]
