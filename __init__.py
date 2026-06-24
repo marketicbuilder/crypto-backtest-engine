@@ -1,3 +1,8 @@
-from .client import supabase
+"""Backtest engine package."""
+from .backtest import BacktestConfig, BacktestEngine, BacktestResult
+from .metrics import Trade, compute_metrics
 
-__all__ = ["supabase"]
+__all__ = [
+    "BacktestConfig", "BacktestEngine", "BacktestResult",
+    "Trade", "compute_metrics",
+]
